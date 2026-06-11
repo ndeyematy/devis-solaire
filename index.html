@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Générateur de Devis — SENEGAL INVEST</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f4f8; color: #222; }
+
+    .header { background: #1a6fba; padding: 16px 20px; display: flex; align-items: center; gap: 14px; }
+    .logo { background: #fff; border-radius: 8px; padding: 6px 10px; font-size: 11px; font-weight: bold; color: #1a6fba; line-height: 1.3; text-align: center; }
+    .header-title { color: #fff; font-size: 18px; font-weight: bold; }
+    .header-sub { color: #b8d8f0; font-size: 12px; margin-top: 2px; }
+
+    .container { max-width: 700px; margin: 20px auto; padding: 0 14px 40px; }
+
+    .section { background: #fff; border-radius: 10px; border: 1px solid #dde4ee; padding: 16px; margin-bottom: 14px; }
+    .section-title { font-size: 12px; font-weight: bold; color: #555; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
+
+    label { font-size: 12px; color: #666; display: block; margin-bottom: 3px; }
+    input, select { width: 100%; padding: 8px 10px; border: 1px solid #ccd4e0; border-radius: 6px; font-size: 13px; background: #fff; }
+    input:focus, select:focus { outline: none; border-color: #1a6fba; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { font-size: 11px; color: #888; font-weight: 600; padding: 5px 6px; text-align: left; border-bottom: 1px solid #eee; }
+    td { padding: 5px 4px; vertical-align: middle; }
+    td input { font-size: 12px; padding: 4px 6px; }
+    .total-cell { font-size: 12px; font-weight: bold; text-align: right; padding-right: 6px; min-width: 80px; }
+
+    .btn-add { background: none; border: 1px dashed #aab; border-radius: 8px; padding: 8px; font-size: 13px; color: #666; cursor: pointer; width: 100%; margin-top: 8px; }
+    .btn-add:hover { background: #f5f7fa; }
+    .btn-remove { background: none; border: none; color: #bbb; cursor: pointer; font-size: 16px; padding: 0 4px; }
+    .btn-remove:hover { color: #e24b4a; }
+
+    .totaux { background: #e6f1fb; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; }
+    .totaux-row { display: flex; justify-content: space-between; font-size: 13px; color: #0c447c; padding: 2px 0; }
+    .totaux-row.main { font-size: 15px; font-weight: bold; border-top: 1px solid #85b7eb; margin-top: 6px; padding-top: 6px; }
+
+    .simul-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .simul-card { background: #f5f7fa; border-radius: 8px; padding: 10px 12px; border: 1px solid #dde; }
+    .simul-val { font-size: 18px; font-weight: bold; color: #1a6fba; }
+    .simul-label { font-size: 11px; color: #888; margin-top: 2px; }
+
+    .btn-apercu { background: #1a6fba; color: #fff; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 4px; }
+    .btn-apercu:hover { background: #155a9a; }
+    .btn-pdf { background: #0f6e56; color: #fff; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 8px; }
+    .btn-pdf:hover { background: #085041; }
+    .btn-pdf:disabled { background: #aaa; cursor: not-allowed; }
+
+    .toast { display: none; background: #0f6e56; color: #fff; border-radius: 8px; padding: 10px 16px; font-size: 13px; text-align: center; margin-top: 8px; }
+    .toast.show { display: block; }
+
+    .preview-wrap { background: #f5f7fa; border-radius: 10px; padding: 16px; margin-top: 14px; border: 1px solid #dde; }
+    .preview-doc { background: #fff; border-radius: 8px; padding: 20px; border: 1px solid #dde; font-size: 12px; color: #222; }
+    .preview-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #1a6fba; }
+    .preview-logo-box { background: #1a6fba; color: #fff; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: bold; }
+    .preview-devis-info { text-align: right; font-size: 11px; color: #555; }
+    .preview-section { margin-bottom: 14px; }
+    .preview-section-title { font-size: 11px; font-weight: bold; color: #1a6fba; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; border-bottom: 1px solid #b5d4f4; padding-bottom: 3px; }
+    .preview-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .preview-table th { background: #e6f1fb; color: #0c447c; padding: 4px 8px; text-align: left; font-weight: bold; }
+    .preview-table td { padding: 4px 8px; border-bottom: 1px solid #eee; }
+    .preview-total-row { background: #1a6fba; color: #fff; font-weight: bold; }
+    .preview-total-row td { padding: 5px 8px; }
+    .simul-preview-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 6px; }
+    .simul-prev-card { background: #e6f1fb; border-radius: 6px; padding: 8px; text-align: center; }
+    .simul-prev-val { font-size: 14px; font-weight: bold; color: #0c447c; }
+    .simul-prev-label { font-size: 10px; color: #378add; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">SENEGAL<br>INVEST</div>
+  <div>
+    <div class="header-title">Générateur de Devis</div>
+    <div class="header-sub">Département Solaire</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="section">
+    <div class="section-title">Informations client</div>
+    <div class="form-row">
+      <div><label>Nom complet</label><input type="text" id="cli-nom" placeholder="Ex: Mamadou Diallo"></div>
+      <div><label>Téléphone</label><input type="text" id="cli-tel" placeholder="Ex: 77 000 00 00"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Adresse</label><input type="text" id="cli-adresse" placeholder="Ex: Dakar, Almadies"></div>
+      <div><label>Type d'installation</label>
+        <select id="cli-type">
+          <option value="">-- Choisir --</option>
+          <option>Kit solaire domestique</option>
+          <option>Système hybride (solaire + groupe)</option>
+          <option>Pompe solaire agricole</option>
+          <option>Climatisation solaire</option>
+          <option>Autre</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Matériels et prix</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:40%">Désignation</th>
+          <th style="width:12%">Qté</th>
+          <th style="width:24%">Prix unitaire (FCFA)</th>
+          <th style="width:18%;text-align:right">Total</th>
+          <th style="width:6%"></th>
+        </tr>
+      </thead>
+      <tbody id="mat-body"></tbody>
+    </table>
+    <button class="btn-add" onclick="addLigne()">+ Ajouter un matériel</button>
+    <div style="margin-top:12px">
+      <div class="form-row">
+        <div><label>Main d'œuvre / Installation (FCFA)</label><input type="number" id="main-oeuvre" value="0" min="0" oninput="calcTotaux()"></div>
+        <div><label>Transport / Déplacement (FCFA)</label><input type="number" id="transport" value="0" min="0" oninput="calcTotaux()"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="totaux">
+    <div class="totaux-row"><span>Sous-total matériels</span><span id="t-mat">0 FCFA</span></div>
+    <div class="totaux-row"><span>Main d'œuvre</span><span id="t-mo">0 FCFA</span></div>
+    <div class="totaux-row"><span>Transport</span><span id="t-tr">0 FCFA</span></div>
+    <div class="totaux-row main"><span>Total devis</span><span id="t-total">0 FCFA</span></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Simulation énergétique</div>
+    <div class="form-row">
+      <div><label>Puissance installée (Wc)</label><input type="number" id="sim-puissance" placeholder="Ex: 1000" oninput="calcSimul()"></div>
+      <div><label>Ensoleillement estimé (h/jour)</label><input type="number" id="sim-soleil" value="5" min="1" max="12" oninput="calcSimul()"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Durée de vie du matériel (ans)</label><input type="number" id="sim-duree" value="20" min="1" max="30" oninput="calcSimul()"></div>
+      <div><label>Coût kWh réseau estimé (FCFA)</label><input type="number" id="sim-kwh" value="100" min="1" oninput="calcSimul()"></div>
+    </div>
+    <div class="simul-grid">
+      <div class="simul-card"><div class="simul-val" id="s-prod">--</div><div class="simul-label">kWh produits/jour</div></div>
+      <div class="simul-card"><div class="simul-val" id="s-eco-mois">--</div><div class="simul-label">Économies/mois (FCFA)</div></div>
+      <div class="simul-card"><div class="simul-val" id="s-eco-an">--</div><div class="simul-label">Économies/an (FCFA)</div></div>
+      <div class="simul-card"><div class="simul-val" id="s-retour">--</div><div class="simul-label">Retour sur investissement</div></div>
+    </div>
+  </div>
+
+  <button class="btn-apercu" onclick="genererPreview()">Aperçu du devis</button>
+  <button class="btn-pdf" id="btn-pdf" onclick="exportPDF()" disabled>Télécharger en PDF</button>
+  <div class="toast" id="toast">PDF généré et téléchargé avec succès !</div>
+
+  <div class="preview-wrap" id="preview-section" style="display:none">
+    <div style="font-size:13px;font-weight:bold;margin-bottom:10px;color:#333">Aperçu du devis</div>
+    <div class="preview-doc" id="preview-content"></div>
+  </div>
+
+</div>
+
+<script>
+  let lignes = [];
+  let devisNum = 'SI-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*900)+100);
+
+  function fmt(n){ return Math.round(n).toLocaleString('fr-FR'); }
+
+  function addLigne(nom='', qte=1, pu=0){
+    const id = Date.now() + Math.random();
+    lignes.push({id, nom, qte, pu});
+    renderLignes();
+  }
+
+  function removeLigne(id){
+    lignes = lignes.filter(l => l.id !== id);
+    renderLignes();
+    calcTotaux();
+  }
+
+  function renderLignes(){
+    const tbody = document.getElementById('mat-body');
+    tbody.innerHTML = '';
+    lignes.forEach(l => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="text" value="${l.nom}" placeholder="Ex: Panneau 200Wc" oninput="updateLigne(${l.id},'nom',this.value)"></td>
+        <td><input type="number" value="${l.qte}" min="1" style="width:55px" oninput="updateLigne(${l.id},'qte',this.value)"></td>
+        <td><input type="number" value="${l.pu}" min="0" placeholder="0" oninput="updateLigne(${l.id},'pu',this.value)"></td>
+        <td class="total-cell">${fmt(l.qte*l.pu)}</td>
+        <td><button class="btn-remove" onclick="removeLigne(${l.id})">✕</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+    calcTotaux();
+  }
+
+  function updateLigne(id, field, val){
+    const l = lignes.find(x => x.id === id);
+    if(!l) return;
+    if(field==='nom') l.nom=val;
+    else if(field==='qte') l.qte=parseFloat(val)||0;
+    else if(field==='pu') l.pu=parseFloat(val)||0;
+    const idx = lignes.findIndex(x => x.id === id);
+    const rows = document.querySelectorAll('#mat-body tr');
+    if(rows[idx]) rows[idx].querySelector('.total-cell').textContent = fmt(l.qte*l.pu);
+    calcTotaux();
+  }
+
+  function getValeurs(){
+    const matTotal = lignes.reduce((s,l) => s+l.qte*l.pu, 0);
+    const mo = parseFloat(document.getElementById('main-oeuvre').value)||0;
+    const tr = parseFloat(document.getElementById('transport').value)||0;
+    const total = matTotal+mo+tr;
+    const p = parseFloat(document.getElementById('sim-puissance').value)||0;
+    const s = parseFloat(document.getElementById('sim-soleil').value)||5;
+    const d = parseFloat(document.getElementById('sim-duree').value)||20;
+    const kwh = parseFloat(document.getElementById('sim-kwh').value)||100;
+    const prodJour = (p*s)/1000;
+    const ecoMois = prodJour*30*kwh;
+    const ecoAn = ecoMois*12;
+    const retour = ecoAn>0?(total/ecoAn):0;
+    return {matTotal,mo,tr,total,p,s,d,kwh,prodJour,ecoMois,ecoAn,retour};
+  }
+
+  function calcTotaux(){
+    const {matTotal,mo,tr,total} = getValeurs();
+    document.getElementById('t-mat').textContent = fmt(matTotal)+' FCFA';
+    document.getElementById('t-mo').textContent = fmt(mo)+' FCFA';
+    document.getElementById('t-tr').textContent = fmt(tr)+' FCFA';
+    document.getElementById('t-total').textContent = fmt(total)+' FCFA';
+    calcSimul();
+  }
+
+  function calcSimul(){
+    const {prodJour,ecoMois,ecoAn,retour} = getValeurs();
+    document.getElementById('s-prod').textContent = prodJour.toFixed(1)+' kWh';
+    document.getElementById('s-eco-mois').textContent = fmt(ecoMois);
+    document.getElementById('s-eco-an').textContent = fmt(ecoAn);
+    document.getElementById('s-retour').textContent = retour>0?retour.toFixed(1)+' ans':'--';
+  }
+
+  function genererPreview(){
+    const nom = document.getElementById('cli-nom').value||'Client';
+    const tel = document.getElementById('cli-tel').value||'--';
+    const adresse = document.getElementById('cli-adresse').value||'--';
+    const type = document.getElementById('cli-type').value||'--';
+    const today = new Date().toLocaleDateString('fr-FR');
+    const {matTotal,mo,tr,total,p,s,d,prodJour,ecoMois,retour} = getValeurs();
+
+    const lignesHTML = lignes.map(l=>`
+      <tr><td>${l.nom||'--'}</td><td style="text-align:center">${l.qte}</td>
+      <td style="text-align:right">${fmt(l.pu)}</td><td style="text-align:right">${fmt(l.qte*l.pu)}</td></tr>
+    `).join('');
+
+    document.getElementById('preview-content').innerHTML = `
+      <div class="preview-header">
+        <div><div class="preview-logo-box">SENEGAL INVEST</div>
+        <div style="font-size:10px;color:#555;margin-top:4px">Département Solaire · Dakar, Sénégal</div></div>
+        <div class="preview-devis-info">
+          <div style="font-size:14px;font-weight:bold;color:#1a6fba">DEVIS</div>
+          <div>N° ${devisNum}</div><div>Date : ${today}</div><div>Validité : 30 jours</div>
+        </div>
+      </div>
+      <div class="preview-section">
+        <div class="preview-section-title">Client</div>
+        <div><strong>${nom}</strong></div><div>${adresse}</div>
+        <div>Tél : ${tel}</div>
+        <div style="margin-top:4px">Type : <strong>${type}</strong></div>
+      </div>
+      <div class="preview-section">
+        <div class="preview-section-title">Détail des matériels</div>
+        <table class="preview-table">
+          <thead><tr><th>Désignation</th><th style="text-align:center">Qté</th><th style="text-align:right">Prix unit.</th><th style="text-align:right">Total</th></tr></thead>
+          <tbody>${lignesHTML}
+            ${mo>0?`<tr><td>Main d'œuvre</td><td style="text-align:center">1</td><td style="text-align:right">${fmt(mo)}</td><td style="text-align:right">${fmt(mo)}</td></tr>`:''}
+            ${tr>0?`<tr><td>Transport</td><td style="text-align:center">1</td><td style="text-align:right">${fmt(tr)}</td><td style="text-align:right">${fmt(tr)}</td></tr>`:''}
+          </tbody>
+          <tfoot><tr class="preview-total-row"><td colspan="3">Total général</td><td style="text-align:right">${fmt(total)} FCFA</td></tr></tfoot>
+        </table>
+      </div>
+      ${p>0?`<div class="preview-section">
+        <div class="preview-section-title">Simulation énergétique</div>
+        <div class="simul-preview-grid">
+          <div class="simul-prev-card"><div class="simul-prev-val">${prodJour.toFixed(1)} kWh</div><div class="simul-prev-label">Production/jour</div></div>
+          <div class="simul-prev-card"><div class="simul-prev-val">${fmt(ecoMois)} FCFA</div><div class="simul-prev-label">Économies/mois</div></div>
+          <div class="simul-prev-card"><div class="simul-prev-val">${retour>0?retour.toFixed(1)+' ans':'--'}</div><div class="simul-prev-label">Retour investissement</div></div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:#777">Base : ${p}Wc · ${s}h ensoleillement/jour · Durée de vie : ${d} ans</div>
+      </div>`:''}
+      <div style="border-top:1px solid #eee;margin-top:14px;padding-top:10px;font-size:10px;color:#aaa;text-align:center">
+        Ce devis est valable 30 jours. · SENEGAL INVEST — Département Solaire · Dakar, Sénégal
+      </div>
+    `;
+    document.getElementById('preview-section').style.display = 'block';
+    document.getElementById('btn-pdf').disabled = false;
+    document.getElementById('preview-section').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  function exportPDF(){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({orientation:'p', unit:'mm', format:'a4'});
+    const nom = document.getElementById('cli-nom').value||'Client';
+    const tel = document.getElementById('cli-tel').value||'--';
+    const adresse = document.getElementById('cli-adresse').value||'--';
+    const type = document.getElementById('cli-type').value||'--';
+    const today = new Date().toLocaleDateString('fr-FR');
+    const {matTotal,mo,tr,total,p,s,d,kwh,prodJour,ecoMois,ecoAn,retour} = getValeurs();
+
+    const bleu=[26,111,186], bleuClair=[230,241,251], blanc=[255,255,255];
+
+    doc.setFillColor(...bleu);
+    doc.rect(0,0,210,28,'F');
+    doc.setTextColor(...blanc);
+    doc.setFontSize(16); doc.setFont('helvetica','bold');
+    doc.text('SENEGAL INVEST',14,12);
+    doc.setFontSize(9); doc.setFont('helvetica','normal');
+    doc.text('Département Solaire · Dakar, Sénégal',14,19);
+    doc.setFontSize(18); doc.setFont('helvetica','bold');
+    doc.text('DEVIS',196,12,{align:'right'});
+    doc.setFontSize(9); doc.setFont('helvetica','normal');
+    doc.text('N° '+devisNum,196,18,{align:'right'});
+    doc.text('Date : '+today,196,23,{align:'right'});
+
+    doc.setTextColor(0,0,0);
+    doc.setFontSize(10); doc.setFont('helvetica','bold');
+    doc.text('CLIENT',14,38);
+    doc.setDrawColor(...bleu); doc.setLineWidth(0.3);
+    doc.line(14,40,80,40);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    doc.text(nom,14,46);
+    doc.text(adresse,14,51);
+    doc.text('Tél : '+tel,14,56);
+    doc.text('Type : '+type,14,61);
+
+    doc.setFontSize(10); doc.setFont('helvetica','bold');
+    doc.text('VALIDITÉ',130,38);
+    doc.line(130,40,196,40);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    doc.text('30 jours à compter du '+today,130,46);
+
+    const rows = lignes.map(l=>[l.nom||'--',l.qte,fmt(l.pu)+' FCFA',fmt(l.qte*l.pu)+' FCFA']);
+    if(mo>0) rows.push(["Main d'œuvre",1,fmt(mo)+' FCFA',fmt(mo)+' FCFA']);
+    if(tr>0) rows.push(['Transport',1,fmt(tr)+' FCFA',fmt(tr)+' FCFA']);
+
+    doc.autoTable({
+      startY:70,
+      head:[['Désignation','Qté','Prix unitaire','Total']],
+      body:rows,
+      foot:[['','','TOTAL GÉNÉRAL',fmt(total)+' FCFA']],
+      headStyles:{fillColor:bleu,textColor:blanc,fontStyle:'bold',fontSize:9},
+      footStyles:{fillColor:bleu,textColor:blanc,fontStyle:'bold',fontSize:10},
+      bodyStyles:{fontSize:9},
+      alternateRowStyles:{fillColor:bleuClair},
+      columnStyles:{0:{cellWidth:80},1:{halign:'center',cellWidth:15},2:{halign:'right',cellWidth:40},3:{halign:'right',cellWidth:40}},
+      margin:{left:14,right:14},
+    });
+
+    if(p>0){
+      const fy = doc.lastAutoTable.finalY+10;
+      doc.setFillColor(...bleu);
+      doc.rect(14,fy,182,7,'F');
+      doc.setTextColor(...blanc); doc.setFontSize(10); doc.setFont('helvetica','bold');
+      doc.text('SIMULATION ÉNERGÉTIQUE ET RENTABILITÉ',105,fy+5,{align:'center'});
+
+      doc.setTextColor(0,0,0); doc.setFont('helvetica','normal');
+      const sy = fy+14;
+      doc.setFillColor(...bleuClair);
+      doc.rect(14,sy-5,56,18,'F');
+      doc.rect(77,sy-5,56,18,'F');
+      doc.rect(140,sy-5,56,18,'F');
+
+      doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...bleu);
+      doc.text(prodJour.toFixed(1)+' kWh',42,sy+3,{align:'center'});
+      doc.text(fmt(ecoMois)+' FCFA',105,sy+3,{align:'center'});
+      doc.text(retour>0?retour.toFixed(1)+' ans':'--',168,sy+3,{align:'center'});
+
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(60,80,120);
+      doc.text('Production/jour',42,sy+9,{align:'center'});
+      doc.text('Économies/mois',105,sy+9,{align:'center'});
+      doc.text('Retour investissement',168,sy+9,{align:'center'});
+
+      doc.setTextColor(120,120,120); doc.setFontSize(8);
+      doc.text('Base : '+p+'Wc · '+s+'h ensoleillement/jour · Durée de vie : '+d+' ans',105,sy+20,{align:'center'});
+    }
+
+    doc.setTextColor(160,160,160); doc.setFontSize(7.5);
+    doc.text('Ce devis est valable 30 jours à compter de sa date d\'émission.',105,287,{align:'center'});
+    doc.text('SENEGAL INVEST — Département Solaire · Dakar, Sénégal',105,291,{align:'center'});
+
+    doc.save('Devis-'+devisNum+'.pdf');
+
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'),3500);
+  }
+
+  addLigne('Panneau solaire 200Wc', 4, 85000);
+  addLigne('Batterie 200Ah', 2, 120000);
+  addLigne('Onduleur 1500W', 1, 95000);
+  calcTotaux();
+  calcSimul();
+</script>
+</body>
+</html>
