@@ -296,9 +296,23 @@
           <div class="simul-prev-card"><div class="simul-prev-val">${fmt(ecoMois)} FCFA</div><div class="simul-prev-label">Économies/mois</div></div>
           <div class="simul-prev-card"><div class="simul-prev-val">${retour>0?retour.toFixed(1)+' ans':'--'}</div><div class="simul-prev-label">Retour investissement</div></div>
         </div>
-        <div style="margin-top:8px;font-size:11px;color:#777">Base : ${p}Wc · ${s}h ensoleillement/jour · Durée de vie : ${d} ans</div>
+        <div style="display:grid;grid-template-columns:1fr;margin-top:10px;">
+          <div style="background:#0f6e56;border-radius:8px;padding:12px 8px;text-align:center;">
+            <div style="font-size:20px;font-weight:bold;color:#ffffff;">${d} ans</div>
+            <div style="font-size:11px;color:#a8e6d4;margin-top:4px;font-weight:500;">Durée de vie du matériel</div>
+          </div>
+        </div>
+        <div style="margin-top:6px;font-size:11px;color:#777;text-align:center;">Base : ${p}Wc installés · ${s}h d'ensoleillement/jour</div>
       </div>`:''}
-      <div style="border-top:1px solid #eee;margin-top:14px;padding-top:10px;font-size:10px;color:#aaa;text-align:center">
+      <div style="margin-top:40px;padding:0 10px;">
+        <div style="display:flex;justify-content:flex-end;">
+          <div style="text-align:center;min-width:180px;">
+            <div style="font-size:12px;font-weight:bold;color:#1a6fba;text-decoration:underline;margin-bottom:60px;">La Direction</div>
+            <div style="border-top:1px solid #333;padding-top:4px;font-size:10px;color:#888;">Signature &amp; Cachet</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:40px;border-top:1px solid #eee;padding-top:10px;font-size:10px;color:#aaa;text-align:center;">
         SENEGAL INVEST — Département Solaire · Kiniabour, Sindia · Tél: 77 494 14 14 / 33 956 62 55 · contact.senegalinvest@gmail.com
       </div>
     `;
